@@ -5,11 +5,11 @@ require(__DIR__. '/settings.php');
  *
  * @param navigation_node $frontpage Node representing the front page in the navigation tree.
  */
-global $DB , $CFG;
+global $DB;
 
 function local_helloworld_extend_navigation_frontpage(navigation_node $frontpage) {
     if (get_config('local_helloworld', 'showinnavigation') !='0' ) {
-        //if(isguestuser()  === false && isloggedin() === true) {
+        if(isguestuser()  === false && isloggedin() === true) {
             $frontpage->add(
                 get_string('pluginname', 'local_helloworld'),
                 new moodle_url('/local/helloworld/index.php'),
@@ -18,7 +18,7 @@ function local_helloworld_extend_navigation_frontpage(navigation_node $frontpage
                 null,
                 new pix_icon('t/message', '')
             );
-       // }
+        }
     }
 }
 

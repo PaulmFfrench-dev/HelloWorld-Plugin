@@ -34,7 +34,7 @@ function xmldb_local_helloworld_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2020102811) {
+    if ($oldversion < 2020102900) {
 
         // Define key userid (foreign) to be added to local_helloworld_msgs.
         $table = new xmldb_table('local_helloworld_msgs');
@@ -44,6 +44,6 @@ function xmldb_local_helloworld_upgrade($oldversion) {
         $dbman->add_key($table, $key);
 
         // Helloworld savepoint reached.
-        upgrade_plugin_savepoint(true, 2020102811, 'local', 'helloworld');
+        upgrade_plugin_savepoint(true, 2020102900, 'local', 'helloworld');
     }
 }

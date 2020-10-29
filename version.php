@@ -28,5 +28,5 @@
  */
 
 $plugin->component = 'local_helloworld';
-$plugin->version = 2020102811;
+$plugin->version = 2020102900;
 $plugin->release = 1.0;
