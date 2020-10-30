@@ -26,97 +26,59 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require(__DIR__. '/../../config.php');
-
-//set redirect
-$PAGE->set_url(new moodle_url('/local/helloworld/index.php'));
+require_once(__DIR__. '/../../config.php');
 
 $PAGE->set_context(context_system::instance());
+$PAGE->set_url(new moodle_url('/local/helloworld/index.php'));
+$PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('pluginname', 'local_helloworld'));
 $PAGE->set_heading(get_string('pluginname', 'local_helloworld'));
-$PAGE->set_pagelayout('standard');
 
 require_login();
 if (isguestuser()) {
     print_error('noguest');
 }
-?>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php echo $OUTPUT->header(); ?>
-</head>
-<body>
+echo $OUTPUT->header();
+?>
     <form method="post" enctype="multipart/form-data">
-        <?php 
-            global $DB;
-            if (has_capability('local/helloworld:postmessages', context_system::instance())) {
-        ?>
-        <div class="form-group">
-            <textarea class="form-control" name="PostDescription"  rows="4" cols="100" placeholder="Type a message" value="' . s($PostDescription) . '"></textarea>
-        </div>         
-        <button type='submit' name='Submitpost'>Submit </button>
-            <?php }?>
+        <?php if (has_capability('local/helloworld:postmessages', context_system::instance())) { ?>
+            <div class="form-group"> <textarea class="form-control" name="PostDescription"  rows="4" cols="100" placeholder="Type a message" value="' . s($PostDescription) . '"></textarea> </div>         
+            <button type='submit' name='Submitpost'>Submit </button>
+         <?php } ?>
     </form>
 
+    <!-- Input of records -->
     <?php
     if (isset($_POST["Submitpost"]) && !empty($_POST["PostDescription"])) {
-        $message = $_POST["PostDescription"];
-        $timenow = new DateTime('now'); 
-        $timecreated = time($timenow);
-
-        global $DB;
         $User_name = $DB->get_record('user', [ 'id' => $USER->id ]);
-        $testname = $User_name->id;
-
         $record = new stdClass(); 
-        $record->timecreated = $timecreated;
-        $record->message = $message;
-        $record->userid = $testname;
+        $record->timecreated = time();
+        $record->message = $_POST["PostDescription"];
+        $record->userid = $User_name->id;
         require_capability('local/helloworld:viewmessages', context_system::instance());
             $lastinsertid = $DB->insert_record('local_helloworld_msgs', $record, false);
     } else if(isset($_POST["Submitpost"]) && empty($_POST["PostDescription"])) {
         echo "Please enter some text";
     }
     ?>
+    <!-- Display of records -->
     <div class="row">
         <?php 
-            global $DB; 
-            $record_count = $DB->count_records_sql("SELECT COUNT(id) FROM m_local_helloworld_msgs");
-            for ($i=0; $i <= $record_count; $i++) { 
-                $usercomment = $DB->get_records('local_helloworld_msgs', [ 'id' => $i ]);
-                $sql = "SELECT * FROM m_user RIGHT JOIN m_local_helloworld_msgs ON m_local_helloworld_msgs.userid = m_user.id";
-                $array = $DB->get_records_sql($sql);
-                foreach ($usercomment as $User_comment) {
-                    $time    =  $User_comment->timecreated;
-                    $message =  $User_comment->message;
-                    $object = $array[$i];
+        global $DB; 
+        $sql = "SELECT * FROM m_user JOIN m_local_helloworld_msgs ON m_local_helloworld_msgs.userid = m_user.id";
+        $usercomment = $DB->get_records_sql($sql);
+        foreach ($usercomment as $User_comment) {
         ?>
         <div class="col-sm-4" style="padding-bottom: 10px;">
             <div class="card">
-                <div class="card-header">
-                    <?php 
-                        $converted_name = fullname($object);
-                        echo $converted_name;
-                    ?> 
-                </div>
-                <div class="card-body">
-                    <p class="card-text"><?php echo format_string($message) ?></p>
-                </div>
+                <div class="card-header"> <?php echo $converted_name = fullname($User_comment); ?> </div>
+                <div class="card-body"> <p class="card-text"><?php echo format_string($User_comment->message) ?></p> </div>
                 <div class="card-footer text-muted">
-                    <?php
-                        $timeposted = $time;
-                        $currenttime = new DateTime('now'); 
-                        $timesincepost = time($currenttime) - $time;
-                        echo format_time($timesincepost);
-                    ?>
+                    <?php $timesincepost = $User_comment->timecreated - time(); echo format_time($timesincepost); ?>
                     <div class="float-right">
-                        <?php 
-                            $usercommentid = $User_comment->id;
-                            if (has_capability('local/helloworld:deleteanymessage', context_system::instance())) {
-                        ?>
-                            <form action="index.php" method="post">
+                        <?php if (has_capability('local/helloworld:deleteanymessage', context_system::instance())) { ?>
+                            <form action="local/helloworld/index.php" method="post">
                                 <input type="checkbox" name="Deletepost" />
                                 <input type="submit" name="formSubmit" value="Delete" />
                                 <input class="hidden" type="text" name="postid" value="<?php echo $User_comment->id; ?>">
@@ -126,10 +88,7 @@ if (isguestuser()) {
                 </div>   
             </div>               
         </div>
-        <?php 
-                }            
-            } 
-        ?>
+        <?php } ?>
         <?php 
             if(isset($_POST['Deletepost'])) {
             $usercommentid = $_POST["postid"]; 
